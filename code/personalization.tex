@@ -1,0 +1,34 @@
+\begin{lstlisting}[caption={Персонализация решающей функции},label={personalization}, language=Java, tabsize=2, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+private fun safeUpdateThreshold(newValue: Double) {
+    val minThreshold = 0.0
+    val maxThreshold = 1.0
+    currentState.threshold = min(maxThreshold, max(minThreshold, newValue))
+}
+
+fun updateState(type: UserAction) {
+    val gamma = 0.9
+    val minimalStep = 0.05
+    val chunksToBorderCount = 7
+
+
+    if (type == UserAction.CANCEL && currentState.step <= 0) {
+        safeUpdateThreshold(currentState.threshold - 0.005)
+        currentState.lastAction = type
+        return
+    }
+    currentState.lastAction = type
+
+    currentState.step *= gamma
+    currentState.step = when (type) {
+        UserAction.COMMIT -> {
+            min((1 - currentState.threshold) / chunksToBorderCount,
+                    currentState.step + minimalStep)
+        }
+        UserAction.CANCEL -> {
+            max(-currentState.threshold / chunksToBorderCount,
+                    currentState.step - minimalStep)
+        }
+    }
+    safeUpdateThreshold(currentState.threshold + currentState.step)
+}
+\end{lstlisting}
